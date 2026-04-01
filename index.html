@@ -623,14 +623,6 @@ input, select, textarea { font-family: var(--font-body); outline: none; }
 
       <div id="alerts-container"></div>
 
-      <div class="chart-wrap">
-        <div class="section-head" style="margin-bottom:12px">
-          <div class="section-title" style="font-size:15px">Evolução do saldo</div>
-          <span class="text-muted">6 meses</span>
-        </div>
-        <div class="chart-canvas-wrap"><canvas id="chart-canvas"></canvas></div>
-      </div>
-
       <div class="card">
         <div class="section-head"><div class="section-title" style="font-size:15px">Por categoria</div></div>
         <div id="cat-breakdown"><div class="text-muted">Sem dados</div></div>
@@ -1330,13 +1322,13 @@ function showAuth() {
   $('auth-screen').classList.add('active');
   $('app').classList.remove('active');
 }
-function showApp() {
+async function showApp() {
   $('auth-screen').classList.remove('active');
   $('app').classList.add('active');
   updateMonthLabel();
   renderTopbarAvatar();
+  await loadCasa();   // garante _casaMembros populado antes de buscar os dados
   loadAll();
-  loadCasa();
 }
 
 function switchAuthTab(tab) {
@@ -1491,16 +1483,28 @@ async function loadAll() {
 
   await ensureSalarioDoMes(cmk);
 
-  const [cSnap, gSnap, rSnap, dSnap] = await Promise.all([
-    col('contas').get(),
-    col('gastos').where('monthKey','==',cmk).get(),
-    col('receitas').where('monthKey','==',cmk).get(),
-    col('dividas').get(),
-  ]);
-  const contas   = cSnap.docs.map(d=>({id:d.id,...d.data()}));
-  const gastos   = gSnap.docs.map(d=>({id:d.id,...d.data()}));
-  const receitas = rSnap.docs.map(d=>({id:d.id,...d.data()}));
-  const dividas  = dSnap.docs.map(d=>({id:d.id,...d.data()}));
+  // UIDs a consultar: usuário atual + todos os membros da casa
+  const uids = [currentUser.uid, ...(_casaMembros||[]).map(m=>m.uid)];
+
+  const colFor = (uid, name) => db.collection(`users/${uid}/${name}`);
+
+  // Busca dados de todos os membros em paralelo
+  const allSnaps = await Promise.all(uids.flatMap(uid => [
+    colFor(uid,'contas').get(),
+    colFor(uid,'gastos').where('monthKey','==',cmk).get(),
+    colFor(uid,'receitas').where('monthKey','==',cmk).get(),
+    colFor(uid,'dividas').get(),
+  ]));
+
+  // Reagrupa: cada uid produziu 4 snaps na ordem [contas, gastos, receitas, dividas]
+  const contas   = [], gastos = [], receitas = [], dividas = [];
+  uids.forEach((uid, i) => {
+    const base = i * 4;
+    allSnaps[base+0].docs.forEach(d => { if(!contas.find(x=>x.id===d.id))   contas.push({id:d.id,...d.data()}); });
+    allSnaps[base+1].docs.forEach(d => { if(!gastos.find(x=>x.id===d.id))   gastos.push({id:d.id,...d.data()}); });
+    allSnaps[base+2].docs.forEach(d => { if(!receitas.find(x=>x.id===d.id)) receitas.push({id:d.id,...d.data()}); });
+    allSnaps[base+3].docs.forEach(d => { if(!dividas.find(x=>x.id===d.id))  dividas.push({id:d.id,...d.data()}); });
+  });
 
   renderContas(contas);
   renderGastos(gastos);
@@ -1667,8 +1671,6 @@ async function renderDashboard(contas, gastos, receitas, dividas) {
     return `<div class="item"><div class="item-icon" style="background:${bg}">${icon}</div><div class="item-info"><div class="item-name">${item.label}</div><div class="item-meta" style="color:${col}">${lbl} · ${item.sub}</div></div><div class="item-amount" style="color:var(--expense)">${fmtBRL(item.valor)}</div></div>`;
   }).join('') : '<div class="empty"><div class="text-muted">Nenhuma conta próxima ✓</div></div>');
 
-  // Gráfico
-  await renderChart();
   // Histórico
   renderHistorico();
 }
