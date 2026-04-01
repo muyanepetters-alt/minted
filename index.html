@@ -1195,66 +1195,41 @@ a { color: inherit; text-decoration: none; }
         <button class="btn btn-ghost btn-sm btn-full" style="margin-top:12px" onclick="resetDividaSheet();openSheet('sheet-divida')">+ Nova dívida</button>
       </div>
 
-      <!-- PLANEJADOR SEMANAL -->
+      <!-- Configuração de Salário -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <div>
-            <div class="section-title" style="font-size:16px">Planejador Semanal</div>
-            <div class="text-muted" id="planner-week-label">Semana atual</div>
-          </div>
-          <span style="font-size:24px">📅</span>
+          <div class="section-title" style="font-size:15px">Meu salário</div>
+          <span style="font-size:20px">💰</span>
         </div>
-        <!-- Informar ganho -->
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px">
-          <div class="form-label" style="margin-bottom:8px">Quanto ganhei essa semana</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input id="planner-ganho-input" class="form-input" type="number" step="0.01" placeholder="R$ 0,00" style="flex:1"/>
-            <button class="btn btn-primary btn-sm" onclick="salvarGanhoSemana()">Salvar</button>
+
+        <!-- Tipo de recebimento -->
+        <div class="form-group">
+          <label class="form-label">Como recebo</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="salary-type-btns">
+            <button class="btn btn-ghost" id="salary-btn-mensal" onclick="setSalaryType('mensal')"
+              style="font-size:13px;padding:10px">📅 Mensal</button>
+            <button class="btn btn-ghost" id="salary-btn-semanal" onclick="setSalaryType('semanal')"
+              style="font-size:13px;padding:10px">📆 Semanal</button>
           </div>
+        </div>
+
+        <!-- Valor -->
+        <div class="form-group" id="salary-mensal-wrap" style="display:none">
+          <label class="form-label">Salário mensal (R$)</label>
+          <input class="form-input" id="salary-mensal-val" type="number" step="0.01" placeholder="0,00"/>
           <div style="font-size:11px;color:var(--text3);margin-top:6px">🔒 Só você vê esse valor</div>
         </div>
-        <!-- Guardar essa semana -->
-        <div style="background:linear-gradient(135deg,var(--turquesa3),var(--dourado3));border:1px solid rgba(0,201,177,.15);border-radius:var(--r);padding:16px;margin-bottom:14px">
-          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Guardar essa semana</div>
-          <div style="font-family:var(--font-display);font-size:32px;font-weight:700;color:var(--turquesa)" id="planner-guardar">R$ 0,00</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:4px" id="planner-pct-sugerido">— % do seu ganho desta semana</div>
-          <div id="planner-alerta" style="display:none;margin-top:8px;font-size:12px;color:var(--dourado2)">⚠️ Ritmo abaixo do necessário</div>
+
+        <div id="salary-semanal-wrap" style="display:none">
+          <div class="form-label" style="margin-bottom:8px">Ganho médio semanal (R$)</div>
+          <input class="form-input" id="salary-semanal-val" type="number" step="0.01" placeholder="0,00"/>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px">🔒 Usado no seu Planner · só você vê</div>
         </div>
-        <!-- Progresso do mês -->
-        <div style="margin-bottom:14px">
-          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:6px">
-            <span>Guardado no mês</span><span id="planner-prog-pct">0%</span>
-          </div>
-          <div style="height:6px;background:var(--surface3);border-radius:99px;overflow:hidden;margin-bottom:6px">
-            <div id="planner-prog-bar" style="height:100%;border-radius:99px;background:linear-gradient(90deg,var(--turquesa2),var(--turquesa));width:0%;transition:width .8s ease"></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)">
-            <span id="planner-guardado-val">R$ 0,00 guardados</span>
-            <span id="planner-falta-val">faltam R$ 0,00</span>
-          </div>
-        </div>
-        <!-- Projeção -->
-        <div style="background:var(--surface2);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:14px;font-size:13px">
-          <span style="color:var(--text3)">🔮 Projeção: </span><span id="planner-projecao-text">—</span>
-        </div>
-        <!-- Semanas visuais -->
-        <div style="margin-bottom:14px">
-          <div class="form-label" style="margin-bottom:10px">Semanas do mês</div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="planner-semanas"></div>
-        </div>
-        <!-- Envelopes -->
-        <div style="margin-bottom:14px">
-          <div class="form-label" style="margin-bottom:10px">Modo Envelope 💌</div>
-          <div style="display:flex;flex-direction:column;gap:8px" id="planner-envelopes"></div>
-        </div>
-        <!-- Desafio -->
-        <div id="planner-desafio" style="background:var(--dourado3);border:1px solid rgba(212,168,75,.2);border-radius:var(--r);padding:12px;font-size:13px;display:none">
-          <div style="font-weight:600;color:var(--dourado2);margin-bottom:4px">🏆 Desafio da semana</div>
-          <div id="planner-desafio-text" style="color:var(--text2)">—</div>
-        </div>
+
+        <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="salvarSalario()">Salvar</button>
       </div>
 
-      <button class="btn btn-ghost btn-full" onclick="doLogout()" style="color:var(--marsala2);border-color:rgba(155,58,74,.3)">
+            <button class="btn btn-ghost btn-full" onclick="doLogout()" style="color:var(--marsala2);border-color:rgba(155,58,74,.3)">
         Sair do minted
       </button>
     </div>
@@ -3120,7 +3095,7 @@ function switchPanel(panel) {
   _currentPanel = panel;
 
   if (panel === 'calendario') renderCalendarPanel();
-  if (panel === 'perfil') { renderPerfil(); }
+  if (panel === 'perfil') { renderPerfil(); loadSalarioConfig(); }
     if (panel === 'planner') { renderPlanner2(); }
 }
 
@@ -3720,6 +3695,69 @@ async function criarGrupo() {
   });
   toast(`Grupo "${nome}" criado! Código: ${newCode}`, 'success');
   document.getElementById('admin-group-name').value = '';
+}
+
+
+// ── SALÁRIO / TIPO DE RECEBIMENTO ────────────
+async function loadSalarioConfig() {
+  if (!currentUser) return;
+  const doc = await db.collection('users').doc(currentUser.uid).get();
+  const data = doc.data() || {};
+  const tipo = data.salarioTipo || 'mensal';
+  const val  = data.salarioVal  || 0;
+
+  setSalaryType(tipo, false);
+
+  if (tipo === 'mensal') {
+    const el = document.getElementById('salary-mensal-val');
+    if (el && val) el.value = val;
+  } else {
+    const el = document.getElementById('salary-semanal-val');
+    if (el && val) el.value = val;
+  }
+}
+
+function setSalaryType(tipo, save = true) {
+  const btnM = document.getElementById('salary-btn-mensal');
+  const btnS = document.getElementById('salary-btn-semanal');
+  const wrapM = document.getElementById('salary-mensal-wrap');
+  const wrapS = document.getElementById('salary-semanal-wrap');
+
+  if (btnM) btnM.style.borderColor = tipo === 'mensal' ? 'var(--turquesa)' : '';
+  if (btnM) btnM.style.color = tipo === 'mensal' ? 'var(--turquesa)' : '';
+  if (btnS) btnS.style.borderColor = tipo === 'semanal' ? 'var(--turquesa)' : '';
+  if (btnS) btnS.style.color = tipo === 'semanal' ? 'var(--turquesa)' : '';
+  if (wrapM) wrapM.style.display = tipo === 'mensal' ? 'block' : 'none';
+  if (wrapS) wrapS.style.display = tipo === 'semanal' ? 'block' : 'none';
+
+  window._salarioTipo = tipo;
+}
+
+async function salvarSalario() {
+  const tipo = window._salarioTipo || 'mensal';
+  const inputId = tipo === 'mensal' ? 'salary-mensal-val' : 'salary-semanal-val';
+  const val = parseFloat(document.getElementById(inputId)?.value) || 0;
+  if (!val) return toast('Informe o valor', 'error');
+
+  await db.collection('users').doc(currentUser.uid).update({
+    salarioTipo: tipo,
+    salarioVal:  val,
+  });
+
+  // Se mensal, NÃO alimenta o planner semanal
+  // Se semanal, salva também como ganho padrão do planner
+  if (tipo === 'semanal') {
+    const wk = getWeekNumber();
+    const mk = monthKey(currentYear, currentMonth);
+    await db.collection('users').doc(currentUser.uid).collection('planner')
+      .doc(`${mk}_w${wk}`).set({
+        ganho: val, semana: wk, monthKey: mk,
+        uid: currentUser.uid, updatedAt: new Date().toISOString()
+      }, { merge: true });
+    toast('Salário semanal salvo e adicionado ao Planner ✓', 'success');
+  } else {
+    toast('Salário mensal salvo ✓', 'success');
+  }
 }
 
 </script>
