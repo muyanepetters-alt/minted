@@ -2087,6 +2087,7 @@ async function loadCasa() {
     $('casa-ativa').style.display='block';
     set('casa-nome',casa.nome);
     set('casa-codigo',casa.codigo);
+    _casaCodigo = casa.codigo || '';
 
     const membrosEl=$('casa-membros');
     const todos=casa.membros||[];
@@ -2139,8 +2140,15 @@ async function entrarCasa() {
 }
 
 function copiarCodigo() {
-  const code=set('casa-codigo','') || $('casa-codigo').textContent;
-  navigator.clipboard.writeText(code).then(()=>toast('Código copiado! ✓'));
+  const code = _casaCodigo || document.getElementById('casa-codigo')?.textContent || '';
+  if (!code || code === '——' || code === '—') return toast('Nenhum código disponível', 'error');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code)
+      .then(() => toast('Código copiado! ✓', 'success'))
+      .catch(() => copiarFallback(code));
+  } else {
+    copiarFallback(code);
+  }
 }
 
 async function novoCodigoCasa() {
